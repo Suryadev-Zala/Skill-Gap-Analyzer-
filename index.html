@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Gap Analyzer Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+        }
+
+        .main-container {
+            max-width: 1024px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 1rem;
+        }
+
+        .card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .card-header {
+            background-color: #f1f5f9;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .file-input-wrapper {
+            border: 2px dashed #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+            background-color: #f8fafc;
+        }
+
+        .file-input-wrapper:hover {
+            border-color: #64748b;
+            background-color: #f1f5f9;
+        }
+
+        .file-input-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .file-input-label svg {
+            width: 2.5rem;
+            height: 2.5rem;
+            margin-bottom: 0.75rem;
+            color: #64748b;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-name-display {
+            margin-top: 0.75rem;
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .file-name-display svg {
+            width: 1rem;
+            height: 1rem;
+            color: #3b82f6;
+            flex-shrink: 0;
+        }
+
+        /* Results Styling */
+        .results-section h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .skill-count-badge {
+            display: inline-block;
+            background-color: #e2e8f0;
+            color: #475569;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+        }
+
+        .skill-list {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 0.75rem;
+        }
+
+        .skill-list li {
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.375rem;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            /* Increased gap slightly for icon */
+        }
+
+        /* Default bullet (using variable for potential override) */
+        .skill-list li::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: var(--bullet-color, #64748b);
+            /* Default color */
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* --- NEW: Icons for Matched/Missing Skills --- */
+        #matchedSkillsList li::before {
+            content: '';
+            /* Reset default dot */
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="%2322c55e"><path fill-rule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd" /></svg>');
+            background-repeat: no-repeat;
+            background-size: contain;
+            width: 1em;
+            /* Adjust size as needed */
+            height: 1em;
+            background-color: transparent;
+            /* Remove dot background */
+            margin-top: 0.1em;
+            /* Fine-tune vertical alignment */
+        }
+
+        #missingSkillsList li::before {
+            content: '';
+            /* Reset default dot */
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="%23ef4444"><path fill-rule="evenodd" d="M6.701 2.25c.725-1.291 2.431-1.291 3.156 0l5.036 8.951c.601 1.071-.05 2.424-1.251 2.683H2.916c-1.2-.259-1.852-1.612-1.251-2.683L6.7 2.25Zm.255 8.25a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 0 1.5h-.75a.75.75 0 0 1-.75-.75Zm0-3a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 0 1.5h-.75a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd" /></svg>');
+            background-repeat: no-repeat;
+            background-size: contain;
+            width: 1em;
+            /* Adjust size as needed */
+            height: 1em;
+            background-color: transparent;
+            /* Remove dot background */
+            margin-top: 0.1em;
+            /* Fine-tune vertical alignment */
+        }
+
+        /* --- End New Icons --- */
+
+        /* Specific List Backgrounds/Borders */
+        #missingSkillsList li {
+            border-left: 3px solid #ef4444;
+            background-color: #fee2e2;
+        }
+
+        #matchedSkillsList li {
+            border-left: 3px solid #22c55e;
+            background-color: #f0fdf4;
+        }
+
+
+        /* Recommendation Styling */
+        #recommendationsContent>div {
+            padding: 1rem 1.25rem;
+            /* Slightly more padding */
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            background-color: #ffffff;
+            /* White background for contrast */
+        }
+
+        /* Style for the skill title within recommendation block */
+        #recommendationsContent .recommendation-skill-title {
+            font-size: 1rem;
+            /* Tailwind text-base */
+            font-weight: 600;
+            /* Tailwind font-semibold */
+            color: #1e293b;
+            /* Tailwind text-slate-800 */
+            margin-bottom: 0.25rem;
+            /* Tailwind mb-1 */
+        }
+
+        /* Style for the category subtitle */
+        #recommendationsContent .recommendation-skill-category {
+            font-size: 0.875rem;
+            /* Tailwind text-sm */
+            color: #64748b;
+            /* Tailwind text-slate-500 */
+            margin-bottom: 0.75rem;
+            /* Tailwind mb-3 */
+        }
+
+        /* Style for the category text itself */
+        #recommendationsContent .recommendation-skill-category span {
+            font-weight: 500;
+            /* Medium weight */
+            color: #475569;
+            /* Slightly darker */
+        }
+
+        /* Style for the list of recommendation items */
+        #recommendationsContent ul {
+            list-style: none;
+            /* Remove default disc */
+            padding-left: 0;
+            /* Remove default padding */
+            margin-top: 0.5rem;
+            /* space-y-2; */
+            /* Add space between list items */
+        }
+
+        #recommendationsContent ul li {
+            margin-bottom: 0;
+            /* Handled by space-y on ul */
+            color: #475569;
+            display: flex;
+            /* Use flex for layout */
+            align-items: baseline;
+            /* Align text nicely */
+            gap: 0.5rem;
+            /* Space between parts */
+            font-size: 0.9rem;
+            /* Slightly adjust size if needed */
+        }
+
+        /* Custom bullet for recommendation items */
+        #recommendationsContent ul li::before {
+            content: '•';
+            color: #94a3b8;
+            /* Lighter bullet color */
+            font-size: 0.8em;
+            /* Smaller bullet */
+            margin-right: 0.25rem;
+            flex-shrink: 0;
+        }
+
+        /* Style for the platform tag/badge */
+        #recommendationsContent .recommendation-platform {
+            font-size: 0.75rem;
+            /* Tailwind text-xs */
+            font-weight: 500;
+            /* Tailwind font-medium */
+            color: #4f46e5;
+            /* Tailwind text-indigo-700 */
+            background-color: #e0e7ff;
+            /* Tailwind bg-indigo-100 */
+            padding: 0.1rem 0.4rem;
+            /* Adjust padding */
+            border-radius: 0.25rem;
+            /* Tailwind rounded-sm */
+            white-space: nowrap;
+            /* Prevent wrapping */
+        }
+
+
+        #recommendationsContent p.italic {
+            color: #64748b;
+            margin-top: 0.5rem;
+            text-align: center;
+            /* Center if no recommendations */
+        }
+
+        .spinner {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-width: 3px;
+            border-color: #3b82f6;
+            border-right-color: transparent;
+        }
+    </style>
+</head>
+
+<body class="py-12">
+
+    <div class="main-container space-y-8">
+
+        <header class="text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-800 mb-2">
+                Skill Gap Analyzer Pro
+            </h1>
+            <p class="text-lg text-slate-600">
+                Bridge the gap between your skills and your dream job.
+            </p>
+        </header>
+
+        <!-- Input Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-xl font-semibold text-slate-700">Upload Documents</h2>
+            </div>
+            <div class="card-body">
+                <p class="text-slate-600 mb-8 text-center text-base">
+                    Select your resume and the target job description (PDF format only).
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Resume Upload -->
+                    <div>
+                        <label for="resumeFile" class="file-input-wrapper">
+                            <span class="file-input-label">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.340-2.345 4.5 4.5 0 011.41 8.775" />
+                                </svg>
+                                Upload Resume PDF
+                            </span>
+                            <input type="file" id="resumeFile" class="file-input" accept=".pdf">
+                        </label>
+                        <p id="resumeFileName" class="file-name-display"></p>
+                    </div>
+                    <!-- Job Description Upload -->
+                    <div>
+                        <label for="jdFile" class="file-input-wrapper">
+                            <span class="file-input-label">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.340-2.345 4.5 4.5 0 011.41 8.775" />
+                                </svg>
+                                Upload Job Description PDF
+                            </span>
+                            <input type="file" id="jdFile" class="file-input" accept=".pdf">
+                        </label>
+                        <p id="jdFileName" class="file-name-display"></p>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button id="analyzeButton"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-md hover:shadow-lg disabled:shadow-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-5 h-5 inline-block mr-2 -mt-1">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                        </svg>
+                        Analyze Skills
+                    </button>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="loadingIndicator"
+                    class="text-center mt-6 hidden flex items-center justify-center gap-3 text-indigo-600">
+                    <div class="inline-block animate-spin rounded-full spinner" role="status"> <span
+                            class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+                    </div>
+                    <p class="font-medium">Analyzing... Please wait.</p>
+                </div>
+
+                <!-- Error Message -->
+                <div id="errorMessage"
+                    class="text-center text-red-600 font-medium mt-6 p-3 bg-red-50 border border-red-200 rounded-lg hidden">
+                </div>
+
+            </div> <!-- End card-body -->
+        </div> <!-- End Input Card -->
+
+
+        <!-- Results Area Card -->
+        <div id="resultsArea" class="card hidden">
+            <div class="card-header">
+                <h2 class="text-xl font-semibold text-slate-700">Analysis Results</h2>
+            </div>
+            <div class="card-body space-y-6">
+
+                <!-- Required Skills -->
+                <div id="requiredSkillsSection" class="results-section">
+                    <h3>
+                        <span>Required Skills</span>
+                        <span id="requiredSkillsCount" class="skill-count-badge">0</span>
+                    </h3>
+                    <ul id="requiredSkillsList" class="skill-list text-slate-600"></ul>
+                </div>
+
+                <!-- User Skills -->
+                <div id="userSkillsSection" class="results-section">
+                    <h3>
+                        <span>Skills Found in Resume</span>
+                        <span id="userSkillsCount" class="skill-count-badge">0</span>
+                    </h3>
+                    <ul id="userSkillsList" class="skill-list text-slate-600"></ul>
+                </div>
+
+                <!-- Matched Skills -->
+                <div id="matchedSkillsSection" class="results-section">
+                    <h3>
+                        <span>Matched Skills</span>
+                        <span id="matchedSkillsCount" class="skill-count-badge">0</span>
+                    </h3>
+                    <ul id="matchedSkillsList" class="skill-list text-slate-600"></ul>
+                </div>
+
+                <!-- Missing Skills (Skill Gap) -->
+                <div id="missingSkillsSection" class="results-section">
+                    <h3>
+                        <span>Missing Skills (Skill Gap)</span>
+                        <span id="missingSkillsCount" class="skill-count-badge">0</span>
+                    </h3>
+                    <ul id="missingSkillsList" class="skill-list text-slate-600"></ul>
+                </div>
+
+                <!-- Additional Skills -->
+                <div id="additionalSkillsSection" class="results-section">
+                    <h3>
+                        <span>Additional Skills You Have</span>
+                        <span id="additionalSkillsCount" class="skill-count-badge">0</span>
+                    </h3>
+                    <ul id="additionalSkillsList" class="skill-list text-slate-600"></ul>
+                </div>
+
+                <!-- Learning Recommendations -->
+                <div id="recommendationsSection" class="results-section pt-4 border-t border-slate-200">
+                    <h3>
+                        <span>Learning Recommendations for Missing Skills</span>
+                    </h3>
+                    <div id="recommendationsContent" class="text-slate-600 space-y-4">
+                        <!-- Content generated by JS -->
+                    </div>
+                </div>
+
+            </div> <!-- End card-body -->
+        </div> <!-- End Results Card -->
+
+    </div> <!-- End Main Container -->
+
+    <script>
+        // --- JAVASCRIPT ---
+        const resumeFileInput = document.getElementById('resumeFile');
+        const jdFileInput = document.getElementById('jdFile');
+        const resumeFileNameDisplay = document.getElementById('resumeFileName');
+        const jdFileNameDisplay = document.getElementById('jdFileName');
+        const analyzeButton = document.getElementById('analyzeButton');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultsArea = document.getElementById('resultsArea');
+        const requiredSkillsCount = document.getElementById('requiredSkillsCount');
+        const requiredSkillsList = document.getElementById('requiredSkillsList');
+        const userSkillsCount = document.getElementById('userSkillsCount');
+        const userSkillsList = document.getElementById('userSkillsList');
+        const matchedSkillsCount = document.getElementById('matchedSkillsCount');
+        const matchedSkillsList = document.getElementById('matchedSkillsList');
+        const missingSkillsCount = document.getElementById('missingSkillsCount');
+        const missingSkillsList = document.getElementById('missingSkillsList');
+        const additionalSkillsCount = document.getElementById('additionalSkillsCount');
+        const additionalSkillsList = document.getElementById('additionalSkillsList');
+        const recommendationsContent = document.getElementById('recommendationsContent');
+
+        const fileIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"><path d="M4.75 1.75a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5ZM3 6.25A1.25 1.25 0 0 1 4.25 5h7.5A1.25 1.25 0 0 1 13 6.25v5.5A1.25 1.25 0 0 1 11.75 13h-7.5A1.25 1.25 0 0 1 3 11.75v-5.5ZM4.25 6.5a.75.75 0 0 0-.75.75v4.5c0 .414.336.75.75.75h7.5a.75.75 0 0 0 .75-.75v-4.5a.75.75 0 0 0-.75-.75h-7.5Z" /></svg>`;
+
+        function updateFileName(inputElement, displayElement) {
+            displayElement.innerHTML = '';
+            if (inputElement.files.length > 0) {
+                const fileName = inputElement.files[0].name;
+                const span = document.createElement('span');
+                span.textContent = fileName;
+                span.style.overflow = 'hidden';
+                span.style.textOverflow = 'ellipsis';
+                span.style.whiteSpace = 'nowrap';
+                displayElement.innerHTML = fileIconSVG;
+                displayElement.appendChild(span);
+            }
+            checkFilesSelected();
+        }
+
+        function checkFilesSelected() {
+            analyzeButton.disabled = !(resumeFileInput.files.length > 0 && jdFileInput.files.length > 0);
+        }
+
+        resumeFileInput.addEventListener('change', () => updateFileName(resumeFileInput, resumeFileNameDisplay));
+        jdFileInput.addEventListener('change', () => updateFileName(jdFileInput, jdFileNameDisplay));
+
+        checkFilesSelected();
+
+        // Function to display skills (LOGIC UNCHANGED - CSS handles styling/icons)
+        function displaySkills(skillListElement, skills, countElement) {
+            skillListElement.innerHTML = ''; // Clear previous list
+            const listId = skillListElement.id; // Get ID for potential conditional logic if needed
+
+            if (skills && skills.length > 0) {
+                skills.forEach(skill => {
+                    const li = document.createElement('li');
+                    li.textContent = skill;
+                    // Icons are added purely via CSS based on the parent ul ID (#matchedSkillsList, #missingSkillsList)
+                    skillListElement.appendChild(li);
+                });
+                if (countElement) countElement.textContent = skills.length;
+            } else {
+                if (countElement) countElement.textContent = 0;
+                const li = document.createElement('li');
+                li.textContent = '(None identified)';
+                li.classList.add('text-slate-500', 'italic', 'justify-center'); // Center empty message
+                li.style.border = '1px dashed #e2e8f0'; // Dashed border for empty state
+                li.style.backgroundColor = '#f8fafc';
+                // Use a specific neutral bullet/icon or remove it for empty state
+                li.style.setProperty('--bullet-color', 'transparent'); // Hide default bullet
+                li.style.gap = '0'; // No gap needed if no icon
+                li.style.padding = '0.75rem'; // Add some padding
+                skillListElement.appendChild(li);
+            }
+        }
+
+        // *** UPDATED: Function to display recommendations with better formatting ***
+        // *** UPDATED: Function to display recommendations with better formatting ***
+        // *** UPDATED: Function to display recommendations with better formatting ***
+        function displayRecommendations(recommendations) {
+            recommendationsContent.innerHTML = ''; // Clear previous recommendations
+            if (recommendations && Object.keys(recommendations).length > 0) {
+                for (const skill in recommendations) { // 'skill' here is the key from the JSON (e.g., "accountability")
+                    const details = recommendations[skill];
+                    if (details && details.category && details.recommendations) {
+                        const skillDiv = document.createElement('div');
+                        // Styles applied via CSS rules targetting #recommendationsContent > div
+
+                        // Skill Title
+                        const skillTitle = document.createElement('h4');
+                        skillTitle.classList.add('recommendation-skill-title'); // CSS hook
+
+                        // --- CHANGE HERE: Capitalize the first letter of the skill key for display ---
+                        // Handles simple cases like "accountability" -> "Accountability"
+                        // Note: This won't automatically fix acronyms like "aws" to "AWS".
+                        // The backend prompt *should* instruct the AI to return correct capitalization,
+                        // but this provides a basic display fix if it doesn't (as seen in the image).
+                        const displaySkillName = skill.charAt(0).toUpperCase() + skill.slice(1);
+                        skillTitle.textContent = displaySkillName; // Use the capitalized version
+                        // --- END CHANGE ---
+
+                        skillDiv.appendChild(skillTitle);
+
+                        // Skill Category Subtitle
+                        const categoryP = document.createElement('p');
+                        categoryP.classList.add('recommendation-skill-category'); // CSS hook
+                        categoryP.innerHTML = `Category: <span>${details.category}</span>`; // Inner span for potential emphasis via CSS
+                        skillDiv.appendChild(categoryP);
+
+
+                        if (details.recommendations.length > 0) {
+                            const recList = document.createElement('ul');
+                            recList.classList.add('space-y-2'); // Add vertical spacing between items
+
+                            details.recommendations.forEach(rec => {
+                                if (rec.name && rec.platform) {
+                                    const recItem = document.createElement('li');
+                                    // Custom bullet added via CSS li::before
+
+                                    // Course Name
+                                    const recNameSpan = document.createElement('span');
+                                    recNameSpan.textContent = rec.name;
+                                    recItem.appendChild(recNameSpan); // Add name first
+
+                                    // Platform Badge
+                                    const recPlatformSpan = document.createElement('span');
+                                    recPlatformSpan.classList.add('recommendation-platform'); // CSS hook for styling
+                                    recPlatformSpan.textContent = rec.platform;
+
+                                    // Check if link exists and make it clickable
+                                    if (rec.link && rec.link !== "N/A" && rec.link.trim() !== "") { // Also check for empty string links
+                                        try {
+                                            // Validate URL format slightly before creating link
+                                            new URL(rec.link); // This will throw an error if the format is invalid
+                                            const link = document.createElement('a');
+                                            link.href = rec.link;
+                                            link.target = "_blank"; // Open in new tab
+                                            link.rel = "noopener noreferrer"; // Security best practice
+                                            link.appendChild(recPlatformSpan); // Wrap the badge in a link
+                                            recItem.appendChild(link);
+                                        } catch (_) {
+                                            // If URL is invalid, just append the non-clickable badge
+                                            recItem.appendChild(recPlatformSpan);
+                                        }
+                                    } else {
+                                        recItem.appendChild(recPlatformSpan); // Add platform badge without link
+                                    }
+
+
+                                    recList.appendChild(recItem);
+                                }
+                            });
+                            skillDiv.appendChild(recList);
+                        } else {
+                            // Message if no specific recommendations found for THIS skill
+                            const noRecs = document.createElement('p');
+                            noRecs.classList.add('text-slate-500', 'italic', 'text-sm', 'ml-4'); // Indent slightly
+                            noRecs.textContent = 'No specific learning resources suggested.';
+                            skillDiv.appendChild(noRecs);
+                        }
+                        recommendationsContent.appendChild(skillDiv);
+                    }
+                }
+            } else {
+                // Message if NO recommendations were found at all
+                const noRecsMessage = document.createElement('p');
+                noRecsMessage.classList.add('text-slate-500', 'italic', 'text-center'); // Center overall message
+                noRecsMessage.textContent = 'No recommendations were generated for missing skills.';
+                recommendationsContent.appendChild(noRecsMessage);
+            }
+        }
+
+
+        // Event listener for the Analyze button (LOGIC UNCHANGED)
+        analyzeButton.addEventListener('click', async () => {
+            const resumeFile = resumeFileInput.files[0];
+            const jdFile = jdFileInput.files[0];
+
+            if (!resumeFile || !jdFile) {
+                errorMessage.textContent = 'Please select both resume and job description PDFs.';
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
+            resultsArea.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            loadingIndicator.classList.remove('hidden');
+            loadingIndicator.classList.add('flex');
+            analyzeButton.disabled = true;
+
+            const formData = new FormData();
+            formData.append('resume', resumeFile);
+            formData.append('job_description', jdFile);
+
+            try {
+                const response = await fetch('http://localhost:5000/analyze', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorData.error || response.statusText}`);
+                }
+                const results = await response.json();
+
+                // Display results using updated functions
+                displaySkills(requiredSkillsList, results.required, requiredSkillsCount);
+                displaySkills(userSkillsList, results.user_has, userSkillsCount);
+                displaySkills(matchedSkillsList, results.matched, matchedSkillsCount);
+                displaySkills(missingSkillsList, results.missing, missingSkillsCount);
+                displaySkills(additionalSkillsList, results.additional, additionalSkillsCount);
+                displayRecommendations(results.recommendations); // Use updated function
+
+                resultsArea.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Analysis failed:', error);
+                errorMessage.textContent = `Analysis failed: ${error.message}. Please ensure the backend server is running and files are valid PDFs.`; // More helpful error
+                errorMessage.classList.remove('hidden');
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                loadingIndicator.classList.remove('flex');
+                analyzeButton.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+
+</html>
